@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { FridgeItem, Category, CATEGORIES, getExpiryStatus } from '@/lib/types'
-import { loadItems, addItem, removeItem, updateItem } from '@/lib/storage'
+import { loadItems, addItem, removeItem, updateItem, clearItems } from '@/lib/storage'
 import FridgeItemCard from './FridgeItemCard'
 import AddItemForm from './AddItemForm'
+import { Search, Plus, Trash2, Snowflake } from 'lucide-react'
 
 type Filter = 'all' | Category | 'expiring'
 
@@ -22,6 +23,7 @@ export default function FridgeView() {
   const [filter, setFilter] = useState<Filter>('all')
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
+  const [confirmClear, setConfirmClear] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -39,6 +41,11 @@ export default function FridgeView() {
 
   function handleUpdate(updated: FridgeItem) {
     setItems((prev) => updateItem(prev, updated))
+  }
+
+  function handleClearAll() {
+    setItems(clearItems())
+    setConfirmClear(false)
   }
 
   const filtered = sortItems(items).filter((item) => {
@@ -60,43 +67,174 @@ export default function FridgeView() {
   if (!mounted) return null
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🧊</span>
-            <h1 className="text-xl font-bold text-gray-900">My Fridge</h1>
-            <span className="text-sm text-gray-500 ml-1">({items.length})</span>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+      <header style={{
+        background: 'rgba(13, 17, 23, 0.88)',
+        backdropFilter: 'blur(14px)',
+        borderBottom: '1px solid var(--border)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 40,
+      }}>
+        <div style={{ maxWidth: '640px', margin: '0 auto', padding: '14px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+              <Snowflake size={20} color="var(--accent)" strokeWidth={1.5} />
+              <span style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: '21px',
+                color: 'var(--text-primary)',
+                letterSpacing: '-0.3px',
+              }}>
+                My Fridge
+              </span>
+              <span style={{
+                fontSize: '11px',
+                color: 'var(--text-muted)',
+                background: 'var(--surface-2)',
+                border: '1px solid var(--border)',
+                borderRadius: '99px',
+                padding: '1px 7px',
+                fontFamily: 'var(--font-mono)',
+              }}>
+                {items.length}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {items.length > 0 && (
+                confirmClear ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Clear all?</span>
+                    <button
+                      onClick={handleClearAll}
+                      style={{
+                        fontSize: '12px',
+                        color: 'var(--status-expired)',
+                        background: 'rgba(248, 81, 73, 0.08)',
+                        border: '1px solid rgba(248, 81, 73, 0.3)',
+                        borderRadius: '6px',
+                        padding: '4px 10px',
+                        cursor: 'pointer',
+                        fontFamily: 'var(--font-sans)',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Yes, clear
+                    </button>
+                    <button
+                      onClick={() => setConfirmClear(false)}
+                      style={{
+                        fontSize: '12px',
+                        color: 'var(--text-secondary)',
+                        background: 'var(--surface-2)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '6px',
+                        padding: '4px 10px',
+                        cursor: 'pointer',
+                        fontFamily: 'var(--font-sans)',
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmClear(true)}
+                    title="Clear all items"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      fontSize: '13px',
+                      color: 'var(--text-secondary)',
+                      background: 'transparent',
+                      border: '1px solid var(--border)',
+                      borderRadius: '8px',
+                      padding: '6px 11px',
+                      cursor: 'pointer',
+                      transition: 'color 0.15s, border-color 0.15s',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = 'var(--status-expired)'
+                      e.currentTarget.style.borderColor = 'rgba(248, 81, 73, 0.4)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = 'var(--text-secondary)'
+                      e.currentTarget.style.borderColor = 'var(--border)'
+                    }}
+                  >
+                    <Trash2 size={13} />
+                    <span>Clear all</span>
+                  </button>
+                )
+              )}
+
+              <button
+                onClick={() => setShowForm(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#0d1117',
+                  background: 'var(--accent)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '7px 14px',
+                  cursor: 'pointer',
+                  transition: 'opacity 0.15s',
+                  fontFamily: 'var(--font-sans)',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.82')}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+              >
+                <Plus size={15} strokeWidth={2.5} />
+                <span>Add</span>
+              </button>
+            </div>
           </div>
-          <button
-            onClick={() => setShowForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-1"
-          >
-            <span className="text-lg leading-none">+</span> Add
-          </button>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-        {/* Search */}
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search items..."
-          className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-        />
+      <main style={{ maxWidth: '640px', margin: '0 auto', padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={{ position: 'relative' }}>
+          <Search
+            size={15}
+            color="var(--text-muted)"
+            style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+          />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search items..."
+            style={{
+              width: '100%',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: '10px',
+              padding: '10px 13px 10px 36px',
+              color: 'var(--text-primary)',
+              fontSize: '14px',
+              fontFamily: 'var(--font-sans)',
+              outline: 'none',
+              transition: 'border-color 0.15s',
+            }}
+            onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--accent)')}
+            onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--border)')}
+          />
+        </div>
 
-        {/* Filters */}
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <div className="scrollbar-hide" style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '2px' }}>
           <FilterChip label="All" active={filter === 'all'} onClick={() => setFilter('all')} />
           {expiringCount > 0 && (
             <FilterChip
               label={`⚠️ Expiring (${expiringCount})`}
               active={filter === 'expiring'}
               onClick={() => setFilter('expiring')}
-              highlight
+              warning
             />
           )}
           {CATEGORIES.map((cat) => {
@@ -113,22 +251,44 @@ export default function FridgeView() {
           })}
         </div>
 
-        {/* Items */}
         {filtered.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
-            <div className="text-5xl mb-3">🧊</div>
-            <p className="font-medium">{items.length === 0 ? 'Fridge is empty' : 'No items match'}</p>
+          <div style={{ textAlign: 'center', padding: '72px 0', color: 'var(--text-muted)' }}>
+            <Snowflake
+              size={44}
+              color="var(--border)"
+              strokeWidth={1}
+              style={{ margin: '0 auto 16px', display: 'block' }}
+            />
+            <p style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: '22px',
+              color: 'var(--text-secondary)',
+              marginBottom: '6px',
+              fontStyle: 'italic',
+            }}>
+              {items.length === 0 ? 'Fridge is empty' : 'No items match'}
+            </p>
             {items.length === 0 && (
               <button
                 onClick={() => setShowForm(true)}
-                className="mt-4 text-blue-600 hover:underline text-sm"
+                style={{
+                  marginTop: '6px',
+                  fontSize: '13px',
+                  color: 'var(--accent)',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-sans)',
+                  textDecoration: 'underline',
+                  textUnderlineOffset: '3px',
+                }}
               >
                 Add your first item
               </button>
             )}
           </div>
         ) : (
-          <div className="space-y-2">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {filtered.map((item) => (
               <FridgeItemCard
                 key={item.id}
@@ -150,25 +310,37 @@ function FilterChip({
   label,
   active,
   onClick,
-  highlight,
+  warning,
 }: {
   label: string
   active: boolean
   onClick: () => void
-  highlight?: boolean
+  warning?: boolean
 }) {
+  const activeStyle = warning
+    ? { background: 'rgba(219,109,40,0.18)', color: 'var(--status-today)', borderColor: 'rgba(219,109,40,0.45)' }
+    : { background: 'var(--accent)', color: '#0d1117', borderColor: 'var(--accent)' }
+
+  const inactiveStyle = warning
+    ? { background: 'rgba(219,109,40,0.05)', color: 'var(--status-today)', borderColor: 'rgba(219,109,40,0.18)' }
+    : { background: 'var(--surface)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }
+
   return (
     <button
       onClick={onClick}
-      className={`whitespace-nowrap px-3 py-1.5 rounded-full text-sm font-medium border transition-colors flex-shrink-0 ${
-        active
-          ? highlight
-            ? 'bg-orange-500 text-white border-orange-500'
-            : 'bg-blue-600 text-white border-blue-600'
-          : highlight
-          ? 'bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100'
-          : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-      }`}
+      style={{
+        whiteSpace: 'nowrap',
+        padding: '5px 12px',
+        borderRadius: '99px',
+        fontSize: '13px',
+        fontWeight: '500',
+        border: '1px solid',
+        cursor: 'pointer',
+        flexShrink: 0,
+        transition: 'all 0.15s',
+        fontFamily: 'var(--font-sans)',
+        ...(active ? activeStyle : inactiveStyle),
+      }}
     >
       {label}
     </button>

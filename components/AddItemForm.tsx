@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Category, CATEGORIES, FridgeItem } from '@/lib/types'
+import { X, PackagePlus } from 'lucide-react'
 
 interface Props {
   onAdd: (item: FridgeItem) => void
@@ -12,6 +13,30 @@ const UNITS = ['pcs', 'g', 'kg', 'ml', 'L', 'pack', 'bottle', 'box']
 
 function todayStr() {
   return new Date().toISOString().split('T')[0]
+}
+
+const inputBase: React.CSSProperties = {
+  width: '100%',
+  background: 'var(--surface-2)',
+  border: '1px solid var(--border)',
+  borderRadius: '8px',
+  padding: '9px 12px',
+  color: 'var(--text-primary)',
+  fontSize: '14px',
+  fontFamily: 'var(--font-sans)',
+  outline: 'none',
+  transition: 'border-color 0.15s',
+}
+
+const labelBase: React.CSSProperties = {
+  display: 'block',
+  fontSize: '11px',
+  fontWeight: '500',
+  color: 'var(--text-muted)',
+  marginBottom: '6px',
+  textTransform: 'uppercase',
+  letterSpacing: '0.6px',
+  fontFamily: 'var(--font-sans)',
 }
 
 export default function AddItemForm({ onAdd, onClose }: Props) {
@@ -37,95 +62,211 @@ export default function AddItemForm({ onAdd, onClose }: Props) {
     onClose()
   }
 
+  function focusBorder(e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) {
+    e.currentTarget.style.borderColor = 'var(--accent)'
+  }
+  function blurBorder(e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) {
+    e.currentTarget.style.borderColor = 'var(--border)'
+  }
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-bold text-gray-800">Add Item</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.72)',
+        backdropFilter: 'blur(5px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 50,
+        padding: '16px',
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div style={{
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: '16px',
+        width: '100%',
+        maxWidth: '420px',
+        maxHeight: '90vh',
+        overflowY: 'auto',
+        boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '18px 22px 16px',
+          borderBottom: '1px solid var(--border)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <PackagePlus size={17} color="var(--accent)" strokeWidth={1.75} />
+            <h2 style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: '20px',
+              color: 'var(--text-primary)',
+              margin: 0,
+              fontStyle: 'italic',
+            }}>
+              Add Item
+            </h2>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              color: 'var(--text-muted)',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              padding: '4px',
+              borderRadius: '6px',
+              transition: 'color 0.15s',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+          >
+            <X size={18} />
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+            <label style={labelBase}>Name *</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Milk, Cheese..."
               required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={inputBase}
+              onFocus={focusBorder}
+              onBlur={blurBorder}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+              <label style={labelBase}>Quantity</label>
               <input
                 type="number"
                 min={0.1}
                 step={0.1}
                 value={quantity}
                 onChange={(e) => setQuantity(parseFloat(e.target.value))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ ...inputBase, fontFamily: 'var(--font-mono)' }}
+                onFocus={focusBorder}
+                onBlur={blurBorder}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Unit</label>
+              <label style={labelBase}>Unit</label>
               <select
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ ...inputBase, cursor: 'pointer' }}
+                onFocus={focusBorder}
+                onBlur={blurBorder}
               >
-                {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+                {UNITS.map((u) => <option key={u} value={u} style={{ background: 'var(--surface-2)' }}>{u}</option>)}
               </select>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-            <div className="grid grid-cols-4 gap-2">
+            <label style={labelBase}>Category</label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat.value}
                   type="button"
                   onClick={() => setCategory(cat.value)}
-                  className={`flex flex-col items-center p-2 rounded-lg border-2 text-xs transition-colors ${
-                    category === cat.value
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 hover:border-gray-300 text-gray-600'
-                  }`}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    padding: '9px 4px',
+                    borderRadius: '8px',
+                    border: '1px solid',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    fontFamily: 'var(--font-sans)',
+                    ...(category === cat.value
+                      ? {
+                          background: 'rgba(88,166,255,0.1)',
+                          borderColor: 'var(--accent)',
+                          color: 'var(--accent)',
+                        }
+                      : {
+                          background: 'var(--surface-2)',
+                          borderColor: 'var(--border)',
+                          color: 'var(--text-muted)',
+                        }
+                    ),
+                  }}
                 >
-                  <span className="text-lg">{cat.emoji}</span>
-                  <span className="mt-0.5 leading-tight text-center">{cat.label}</span>
+                  <span style={{ fontSize: '20px' }}>{cat.emoji}</span>
+                  <span style={{ fontSize: '10px', marginTop: '4px', textAlign: 'center', lineHeight: 1.2 }}>{cat.label}</span>
                 </button>
               ))}
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date *</label>
+            <label style={labelBase}>Expiry Date *</label>
             <input
               type="date"
               value={expiryDate}
               min={todayStr()}
               onChange={(e) => setExpiryDate(e.target.value)}
               required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={{ ...inputBase, colorScheme: 'dark', fontFamily: 'var(--font-mono)' }}
+              onFocus={focusBorder}
+              onBlur={blurBorder}
             />
           </div>
 
-          <div className="flex gap-3 pt-2">
+          <div style={{ display: 'flex', gap: '10px', paddingTop: '4px' }}>
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium transition-colors"
+              style={{
+                flex: 1,
+                padding: '10px',
+                borderRadius: '8px',
+                border: '1px solid var(--border)',
+                background: 'transparent',
+                color: 'var(--text-secondary)',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-sans)',
+                transition: 'border-color 0.15s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--text-muted)')}
+              onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border)')}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
+              style={{
+                flex: 1,
+                padding: '10px',
+                borderRadius: '8px',
+                border: 'none',
+                background: 'var(--accent)',
+                color: '#0d1117',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-sans)',
+                transition: 'opacity 0.15s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.82')}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
             >
               Add to Fridge
             </button>

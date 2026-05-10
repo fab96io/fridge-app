@@ -33,3 +33,8 @@ export function updateItem(items: FridgeItem[], updated: FridgeItem): FridgeItem
   saveItems(next)
   return next
 }
+
+export function clearItems(): FridgeItem[] {
+  saveItems([])
+  return []
+}

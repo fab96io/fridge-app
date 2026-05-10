@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { FridgeItem, CATEGORIES, getExpiryStatus, getDaysUntilExpiry } from '@/lib/types'
+import { Trash2, Pencil, Check, X } from 'lucide-react'
 
 interface Props {
   item: FridgeItem
@@ -9,26 +10,39 @@ interface Props {
   onUpdate: (item: FridgeItem) => void
 }
 
-const statusStyles = {
-  expired: 'bg-red-100 text-red-700 border-red-200',
-  today: 'bg-orange-100 text-orange-700 border-orange-200',
-  soon: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-  ok: 'bg-green-100 text-green-700 border-green-200',
-}
-
-const cardBorder = {
-  expired: 'border-l-4 border-l-red-400',
-  today: 'border-l-4 border-l-orange-400',
-  soon: 'border-l-4 border-l-yellow-400',
-  ok: 'border-l-4 border-l-green-400',
+const statusConfig = {
+  expired: {
+    color: 'var(--status-expired)',
+    bg: 'rgba(248,81,73,0.06)',
+    border: 'rgba(248,81,73,0.22)',
+    accent: 'var(--status-expired)',
+  },
+  today: {
+    color: 'var(--status-today)',
+    bg: 'rgba(219,109,40,0.06)',
+    border: 'rgba(219,109,40,0.22)',
+    accent: 'var(--status-today)',
+  },
+  soon: {
+    color: 'var(--status-soon)',
+    bg: 'rgba(210,153,34,0.06)',
+    border: 'rgba(210,153,34,0.22)',
+    accent: 'var(--status-soon)',
+  },
+  ok: {
+    color: 'var(--status-ok)',
+    bg: 'var(--surface)',
+    border: 'var(--border)',
+    accent: 'var(--status-ok)',
+  },
 }
 
 function expiryLabel(date: string): string {
   const days = getDaysUntilExpiry(date)
-  if (days < 0) return `Expired ${Math.abs(days)}d ago`
-  if (days === 0) return 'Expires today'
-  if (days === 1) return 'Expires tomorrow'
-  return `Expires in ${days}d`
+  if (days < 0) return `${Math.abs(days)}d ago`
+  if (days === 0) return 'today'
+  if (days === 1) return 'tomorrow'
+  return `${days}d left`
 }
 
 export default function FridgeItemCard({ item, onRemove, onUpdate }: Props) {
@@ -36,6 +50,7 @@ export default function FridgeItemCard({ item, onRemove, onUpdate }: Props) {
   const [qty, setQty] = useState(item.quantity)
 
   const status = getExpiryStatus(item.expiryDate)
+  const cfg = statusConfig[status]
   const cat = CATEGORIES.find((c) => c.value === item.category)
 
   function saveQty() {
@@ -44,42 +59,112 @@ export default function FridgeItemCard({ item, onRemove, onUpdate }: Props) {
   }
 
   return (
-    <div className={`bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center gap-4 ${cardBorder[status]}`}>
-      <span className="text-3xl flex-shrink-0">{cat?.emoji}</span>
+    <div
+      style={{
+        background: cfg.bg,
+        border: `1px solid ${cfg.border}`,
+        borderLeft: `3px solid ${cfg.color}`,
+        borderRadius: '12px',
+        padding: '13px 15px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '13px',
+      }}
+    >
+      <span style={{ fontSize: '26px', flexShrink: 0, lineHeight: 1 }}>{cat?.emoji}</span>
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <p className="font-semibold text-gray-900 truncate">{item.name}</p>
-            <p className="text-sm text-gray-500">{cat?.label}</p>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
+          <div style={{ minWidth: 0 }}>
+            <p style={{
+              fontWeight: '600',
+              color: 'var(--text-primary)',
+              fontSize: '15px',
+              margin: 0,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              fontFamily: 'var(--font-sans)',
+            }}>
+              {item.name}
+            </p>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0', fontFamily: 'var(--font-sans)' }}>
+              {cat?.label}
+            </p>
           </div>
-          <span className={`text-xs px-2 py-1 rounded-full border font-medium whitespace-nowrap ${statusStyles[status]}`}>
+          <span style={{
+            fontSize: '11px',
+            padding: '2px 8px',
+            borderRadius: '99px',
+            border: `1px solid ${cfg.border}`,
+            color: cfg.color,
+            whiteSpace: 'nowrap',
+            fontFamily: 'var(--font-mono)',
+            flexShrink: 0,
+          }}>
             {expiryLabel(item.expiryDate)}
           </span>
         </div>
 
-        <div className="mt-2 flex items-center gap-3">
+        <div style={{ marginTop: '8px' }}>
           {editing ? (
-            <div className="flex items-center gap-2">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <input
                 type="number"
                 min={0.1}
                 step={0.1}
                 value={qty}
                 onChange={(e) => setQty(parseFloat(e.target.value))}
-                className="w-20 border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 autoFocus
+                style={{
+                  width: '62px',
+                  background: 'var(--surface-2)',
+                  border: '1px solid var(--accent)',
+                  borderRadius: '6px',
+                  padding: '3px 7px',
+                  color: 'var(--text-primary)',
+                  fontSize: '13px',
+                  fontFamily: 'var(--font-mono)',
+                  outline: 'none',
+                }}
               />
-              <span className="text-sm text-gray-500">{item.unit}</span>
-              <button onClick={saveQty} className="text-xs bg-blue-600 text-white px-2 py-1 rounded-md hover:bg-blue-700">Save</button>
-              <button onClick={() => { setEditing(false); setQty(item.quantity) }} className="text-xs text-gray-500 hover:text-gray-700">✕</button>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                {item.unit}
+              </span>
+              <button
+                onClick={saveQty}
+                style={{ color: 'var(--status-ok)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '2px' }}
+              >
+                <Check size={14} />
+              </button>
+              <button
+                onClick={() => { setEditing(false); setQty(item.quantity) }}
+                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '2px' }}
+              >
+                <X size={14} />
+              </button>
             </div>
           ) : (
             <button
               onClick={() => setEditing(true)}
-              className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '13px',
+                color: 'var(--text-secondary)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+                fontFamily: 'var(--font-mono)',
+                transition: 'color 0.15s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent)')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
             >
-              {item.quantity} {item.unit}
+              <span>{item.quantity} {item.unit}</span>
+              <Pencil size={10} />
             </button>
           )}
         </div>
@@ -87,10 +172,23 @@ export default function FridgeItemCard({ item, onRemove, onUpdate }: Props) {
 
       <button
         onClick={() => onRemove(item.id)}
-        className="flex-shrink-0 text-gray-300 hover:text-red-500 transition-colors text-xl leading-none"
-        title="Remove item"
+        title="Remove"
+        style={{
+          flexShrink: 0,
+          color: 'var(--text-muted)',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '5px',
+          borderRadius: '6px',
+          transition: 'color 0.15s',
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--status-expired)')}
+        onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
       >
-        🗑
+        <Trash2 size={15} />
       </button>
     </div>
   )
